@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, Filter, Package } from "lucide-react";
-import { motion } from "framer-motion";
+import { Plus, Search, Filter, Package, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Product {
   id: number;
@@ -15,12 +15,21 @@ interface Product {
 export function Products() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    sku: "",
+    uom: "pcs",
+    reorder_point: 0,
+    reorder_qty: 0,
+    category_id: 1 // default category
+  });
 
-  useEffect(() => {
+  const fetchProducts = () => {
     fetch("http://localhost:8000/v1/products/")
       .then(res => res.json())
       .then(data => {
-        // Map backend data to frontend model (mocking stock status for demo)
+        // Map backend data to frontend model
         const formatted = data.map((p: any) => ({
           ...p,
           category: p.category_id ? "Mapped Category" : "Uncategorized",
@@ -34,17 +43,123 @@ export function Products() {
         console.error("Error fetching products:", err);
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    fetchProducts();
   }, []);
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    fetch("http://localhost:8000/v1/products/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData)
+    })
+    .then(res => {
+      if (res.ok) {
+        setIsModalOpen(false);
+        fetchProducts(); // Refresh list
+        setFormData({ name: "", sku: "", uom: "pcs", reorder_point: 0, reorder_qty: 0, category_id: 1 });
+      } else {
+        console.error("Failed to create product");
+      }
+    });
+  };
+
   return (
-    <div className="space-y-6 max-w-7xl mx-auto h-full flex flex-col">
+    <div className="space-y-6 max-w-7xl mx-auto h-full flex flex-col relative">
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-gray-900 border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-white">Create New Product</h2>
+                <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-white transition-colors">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Product Name</label>
+                  <input 
+                    type="text" required
+                    value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-violet-500/50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">SKU</label>
+                  <input 
+                    type="text" required
+                    value={formData.sku} onChange={e => setFormData({...formData, sku: e.target.value})}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-violet-500/50"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Unit of Measure (UoM)</label>
+                    <input 
+                      type="text" required
+                      value={formData.uom} onChange={e => setFormData({...formData, uom: e.target.value})}
+                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-violet-500/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Category ID</label>
+                    <input 
+                      type="number" required
+                      value={formData.category_id} onChange={e => setFormData({...formData, category_id: parseInt(e.target.value)})}
+                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-violet-500/50"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Reorder Point</label>
+                    <input 
+                      type="number" required
+                      value={formData.reorder_point} onChange={e => setFormData({...formData, reorder_point: parseFloat(e.target.value)})}
+                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-violet-500/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Reorder Qty</label>
+                    <input 
+                      type="number" required
+                      value={formData.reorder_qty} onChange={e => setFormData({...formData, reorder_qty: parseFloat(e.target.value)})}
+                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-violet-500/50"
+                    />
+                  </div>
+                </div>
+                
+                <div className="pt-4 flex justify-end gap-3">
+                  <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-gray-400 hover:text-white transition-colors">
+                    Cancel
+                  </button>
+                  <button type="submit" className="bg-violet-600 hover:bg-violet-500 text-white px-6 py-2 rounded-xl text-sm font-medium transition-colors">
+                    Save Product
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Products</h1>
           <p className="text-gray-400">Manage your product catalog, categories, and inventory items.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-lg shadow-violet-500/20">
+          <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-lg shadow-violet-500/20">
             <Plus className="h-4 w-4" />
             New Product
           </button>

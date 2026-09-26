@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, Filter, Truck } from "lucide-react";
-import { motion } from "framer-motion";
+import { Plus, Search, Filter, Truck, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Receipt {
   id: string;
@@ -13,8 +13,13 @@ interface Receipt {
 export function Receipts() {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    warehouse_id: 1,
+    supplier_id: 1
+  });
 
-  useEffect(() => {
+  const fetchReceipts = () => {
     fetch("http://localhost:8000/v1/receipts/")
       .then(res => res.json())
       .then(data => {
@@ -32,17 +37,92 @@ export function Receipts() {
         console.error("Error fetching receipts:", err);
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    fetchReceipts();
   }, []);
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Default payload with empty lines for Draft creation
+    const payload = {
+      warehouse_id: formData.warehouse_id,
+      supplier_id: formData.supplier_id,
+      lines: [] // Adding lines would typically be a second step or require dynamic form fields
+    };
+    
+    fetch("http://localhost:8000/v1/receipts/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+    .then(res => {
+      if (res.ok) {
+        setIsModalOpen(false);
+        fetchReceipts();
+      } else {
+        console.error("Failed to create receipt");
+      }
+    });
+  };
+
   return (
-    <div className="space-y-6 max-w-7xl mx-auto h-full flex flex-col">
+    <div className="space-y-6 max-w-7xl mx-auto h-full flex flex-col relative">
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-gray-900 border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-white">Create Draft Receipt</h2>
+                <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-white transition-colors">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Destination Warehouse ID</label>
+                  <input 
+                    type="number" required
+                    value={formData.warehouse_id} onChange={e => setFormData({...formData, warehouse_id: parseInt(e.target.value)})}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-violet-500/50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Supplier ID</label>
+                  <input 
+                    type="number" required
+                    value={formData.supplier_id} onChange={e => setFormData({...formData, supplier_id: parseInt(e.target.value)})}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-violet-500/50"
+                  />
+                </div>
+                <div className="pt-4 flex justify-end gap-3">
+                  <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-gray-400 hover:text-white transition-colors">
+                    Cancel
+                  </button>
+                  <button type="submit" className="bg-violet-600 hover:bg-violet-500 text-white px-6 py-2 rounded-xl text-sm font-medium transition-colors">
+                    Create Draft
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Receipts</h1>
           <p className="text-gray-400">Manage incoming goods from vendors.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-lg shadow-violet-500/20">
+          <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-lg shadow-violet-500/20">
             <Plus className="h-4 w-4" />
             New Receipt
           </button>

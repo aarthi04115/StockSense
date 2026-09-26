@@ -1,7 +1,23 @@
+import { useState, useEffect } from "react";
 import { Bot, Sparkles, AlertTriangle, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
 
 export function AIInsights() {
+  const [forecasts, setForecasts] = useState<any[]>([]);
+  const [anomalies, setAnomalies] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch("http://localhost:8000/v1/ai/forecasts")
+      .then(res => res.json())
+      .then(data => setForecasts(data))
+      .catch(console.error);
+
+    fetch("http://localhost:8000/v1/ai/anomalies")
+      .then(res => res.json())
+      .then(data => setAnomalies(data))
+      .catch(console.error);
+  }, []);
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto h-full flex flex-col">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -23,18 +39,19 @@ export function AIInsights() {
             <h2 className="text-xl font-semibold text-white">Demand Forecasting</h2>
           </div>
           <div className="space-y-4 flex-1 overflow-auto pr-2">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-black/20 border border-white/5 rounded-xl p-4">
+            {forecasts.map((f, i) => (
+              <div key={f.id || i} className="bg-black/20 border border-white/5 rounded-xl p-4">
                 <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-white font-medium">Premium Widgets (SKU-100{i})</h3>
-                  <span className="text-xs font-medium px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded-full border border-emerald-500/20">85% Confidence</span>
+                  <h3 className="text-white font-medium">{f.product_name} ({f.sku})</h3>
+                  <span className="text-xs font-medium px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded-full border border-emerald-500/20">{(f.confidence * 100).toFixed(0)}% Confidence</span>
                 </div>
-                <p className="text-sm text-gray-400 mb-3">Predicted stockout in <strong className="text-amber-400">{14 + i * 3} days</strong> based on recent consumption trends.</p>
+                <p className="text-sm text-gray-400 mb-3">Predicted stockout on <strong className="text-amber-400">{new Date(f.predicted_stockout_date).toLocaleDateString()}</strong> based on recent consumption trends.</p>
                 <button className="text-sm text-violet-400 hover:text-violet-300 font-medium">
-                  Review Suggested Reorder →
+                  Review Suggested Reorder ({f.suggested_reorder_qty} pcs) →
                 </button>
               </div>
             ))}
+            {forecasts.length === 0 && <p className="text-gray-500">No forecasts available.</p>}
           </div>
         </div>
 
@@ -47,28 +64,24 @@ export function AIInsights() {
             <h2 className="text-xl font-semibold text-white">Anomaly Detection</h2>
           </div>
           <div className="space-y-4 flex-1 overflow-auto pr-2">
-            <div className="bg-rose-500/5 border border-rose-500/20 rounded-xl p-4">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="text-white font-medium">Suspicious Adjustment</h3>
-                <span className="text-xs font-medium px-2 py-1 bg-rose-500/20 text-rose-400 rounded-full">High Severity</span>
+            {anomalies.map((a, i) => (
+              <div key={a.id || i} className={`border rounded-xl p-4 ${a.anomaly_score > 0.9 ? 'bg-rose-500/5 border-rose-500/20' : 'bg-amber-500/5 border-amber-500/20'}`}>
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="text-white font-medium">Suspicious Adjustment</h3>
+                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${a.anomaly_score > 0.9 ? 'bg-rose-500/20 text-rose-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                    Score: {a.anomaly_score.toFixed(2)}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-400 mb-2">{a.reason} <strong>{a.product_name}</strong>.</p>
+                <div className="flex gap-3 mt-3">
+                  <button className={`text-sm text-white px-3 py-1.5 rounded-lg transition-colors ${a.anomaly_score > 0.9 ? 'bg-rose-600 hover:bg-rose-500' : 'bg-amber-600 hover:bg-amber-500'}`}>
+                    Investigate
+                  </button>
+                  <button className="text-sm text-gray-400 hover:text-white px-3 py-1.5 rounded-lg transition-colors">Dismiss</button>
+                </div>
               </div>
-              <p className="text-sm text-gray-400 mb-2">Unusually large negative adjustment (-50 units) on <strong>Ergonomic Office Chair</strong> by Warehouse Staff.</p>
-              <div className="flex gap-3 mt-3">
-                <button className="text-sm bg-rose-600 hover:bg-rose-500 text-white px-3 py-1.5 rounded-lg transition-colors">Investigate</button>
-                <button className="text-sm text-gray-400 hover:text-white px-3 py-1.5 rounded-lg transition-colors">Dismiss</button>
-              </div>
-            </div>
-            <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="text-white font-medium">Repetitive Shrinkage</h3>
-                <span className="text-xs font-medium px-2 py-1 bg-amber-500/20 text-amber-400 rounded-full">Medium Severity</span>
-              </div>
-              <p className="text-sm text-gray-400 mb-2">Pattern of repeated minor losses marked as "damaged" for <strong>USB-C Hub adapter</strong> over the last 30 days.</p>
-              <div className="flex gap-3 mt-3">
-                <button className="text-sm bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 rounded-lg transition-colors">Investigate</button>
-                <button className="text-sm text-gray-400 hover:text-white px-3 py-1.5 rounded-lg transition-colors">Dismiss</button>
-              </div>
-            </div>
+            ))}
+            {anomalies.length === 0 && <p className="text-gray-500">No anomalies detected.</p>}
           </div>
         </div>
       </div>

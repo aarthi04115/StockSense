@@ -1,22 +1,131 @@
-import { useState } from "react";
-import { Plus, Search, Filter, ArrowRightLeft } from "lucide-react";
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { Plus, Search, Filter, ArrowRightLeft, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+
+interface Transfer {
+  id: string;
+  from: string;
+  to: string;
+  product: string;
+  qty: number;
+  status: string;
+  date: string;
+}
 
 export function Transfers() {
-  const [transfers, setTransfers] = useState([
-    { id: "TRN-881", from: "Warehouse A", to: "Production Floor", product: "SKU-1002", qty: 20, status: "Done", date: "2024-03-24" },
-    { id: "TRN-882", from: "Warehouse A", to: "Warehouse B", product: "SKU-1004", qty: 50, status: "Draft", date: "2024-03-26" },
-  ]);
+  const [transfers, setTransfers] = useState<Transfer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    source_warehouse_id: 1,
+    destination_warehouse_id: 2
+  });
+
+  const fetchTransfers = () => {
+    fetch("http://localhost:8000/v1/transfers/")
+      .then(res => res.json())
+      .then(data => {
+        const formatted = data.map((t: any) => ({
+          id: `TRN-${t.id}`,
+          from: `Warehouse ${t.source_warehouse_id}`,
+          to: `Warehouse ${t.destination_warehouse_id}`,
+          product: "Multiple Items",
+          qty: 0,
+          status: t.status || "Draft",
+          date: t.validated_at ? new Date(t.validated_at).toLocaleDateString() : "Pending"
+        }));
+        setTransfers(formatted);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Error fetching transfers:", err);
+        setLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    fetchTransfers();
+  }, []);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const payload = {
+      source_warehouse_id: formData.source_warehouse_id,
+      destination_warehouse_id: formData.destination_warehouse_id,
+      lines: []
+    };
+    
+    fetch("http://localhost:8000/v1/transfers/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+    .then(res => {
+      if (res.ok) {
+        setIsModalOpen(false);
+        fetchTransfers();
+      } else {
+        console.error("Failed to create transfer");
+      }
+    });
+  };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto h-full flex flex-col">
+    <div className="space-y-6 max-w-7xl mx-auto h-full flex flex-col relative">
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-gray-900 border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-white">Create Draft Transfer</h2>
+                <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-white transition-colors">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Source Warehouse ID</label>
+                  <input 
+                    type="number" required
+                    value={formData.source_warehouse_id} onChange={e => setFormData({...formData, source_warehouse_id: parseInt(e.target.value)})}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-violet-500/50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Destination Warehouse ID</label>
+                  <input 
+                    type="number" required
+                    value={formData.destination_warehouse_id} onChange={e => setFormData({...formData, destination_warehouse_id: parseInt(e.target.value)})}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-violet-500/50"
+                  />
+                </div>
+                <div className="pt-4 flex justify-end gap-3">
+                  <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-gray-400 hover:text-white transition-colors">
+                    Cancel
+                  </button>
+                  <button type="submit" className="bg-violet-600 hover:bg-violet-500 text-white px-6 py-2 rounded-xl text-sm font-medium transition-colors">
+                    Create Draft
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Transfers</h1>
           <p className="text-gray-400">Manage internal stock movements.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-lg shadow-violet-500/20">
+          <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-lg shadow-violet-500/20">
             <Plus className="h-4 w-4" />
             New Transfer
           </button>
@@ -45,8 +154,7 @@ export function Transfers() {
                 <th className="px-6 py-3 rounded-tl-xl">Transfer ID</th>
                 <th className="px-6 py-3">From</th>
                 <th className="px-6 py-3">To</th>
-                <th className="px-6 py-3">Product</th>
-                <th className="px-6 py-3">Qty</th>
+                <th className="px-6 py-3">Date</th>
                 <th className="px-6 py-3 rounded-tr-xl">Status</th>
               </tr>
             </thead>
@@ -66,11 +174,11 @@ export function Transfers() {
                   </td>
                   <td className="px-6 py-4 text-gray-300">{t.from}</td>
                   <td className="px-6 py-4 text-gray-300">{t.to}</td>
-                  <td className="px-6 py-4 text-gray-400">{t.product}</td>
-                  <td className="px-6 py-4 text-white font-medium">{t.qty}</td>
+                  <td className="px-6 py-4 text-gray-400">{t.date}</td>
                   <td className="px-6 py-4">
                     <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${
                       t.status === "Done" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
+                      t.status === "Waiting" ? "bg-amber-500/10 text-amber-400 border-amber-500/20" :
                       "bg-gray-500/10 text-gray-400 border-gray-500/20"
                     }`}>
                       {t.status}

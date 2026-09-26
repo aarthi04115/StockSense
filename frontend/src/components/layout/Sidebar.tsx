@@ -26,7 +26,7 @@ export function Sidebar() {
     >
       <div className="h-16 flex items-center px-6 border-b border-white/5">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-bold text-xl shadow-[0_0_15px_rgba(16,185,129,0.5)]">
+          <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center text-white font-bold text-xl shadow-[0_0_15px_rgba(139,92,246,0.5)]">
             S
           </div>
           <span className="font-bold text-lg tracking-tight text-white">StockSense</span>
@@ -44,19 +44,19 @@ export function Sidebar() {
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 group relative",
                   isActive 
-                    ? "text-white bg-gradient-to-r from-emerald-500/20 to-transparent" 
+                    ? "text-white bg-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]" 
                     : "text-gray-400 hover:text-white hover:bg-white/5"
                 )}
               >
                 {isActive && (
                   <motion.div 
                     layoutId="sidebar-active"
-                    className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 rounded-r-full shadow-[0_0_10px_rgba(16,185,129,0.8)]" 
+                    className="absolute left-0 top-0 bottom-0 w-1 bg-violet-500 rounded-r-full shadow-[0_0_10px_rgba(139,92,246,0.8)]" 
                   />
                 )}
                 <item.icon className={cn(
                   "h-5 w-5 transition-colors duration-300 relative z-10", 
-                  isActive ? "text-emerald-400" : "group-hover:text-emerald-300"
+                  isActive ? "text-violet-400" : "group-hover:text-violet-300"
                 )} />
                 <span className="relative z-10">{item.name}</span>
               </Link>

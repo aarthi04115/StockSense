@@ -4,26 +4,43 @@ import { MessageSquare, X, Send, Bot } from "lucide-react";
 
 export function AIChatPanel() {
   const [isOpen, setIsOpen] = useState(false);
+  const [input, setInput] = useState("");
   const [messages, setMessages] = useState([
     { id: 1, role: "ai", content: "Hi! I'm your StockSense AI assistant. Ask me anything about your inventory, like \"what's pending in Warehouse 2?\"" }
   ]);
-  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSend = () => {
-    if (!input.trim()) return;
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return;
     
+    const userQuery = input.trim();
     // Add user message
-    setMessages(prev => [...prev, { id: Date.now(), role: "user", content: input }]);
+    setMessages(prev => [...prev, { id: Date.now(), role: "user", content: userQuery }]);
     setInput("");
+    setIsLoading(true);
     
-    // Mock AI response
-    setTimeout(() => {
-      setMessages(prev => [...prev, { 
-        id: Date.now(), 
-        role: "ai", 
-        content: "I've checked the live data. Warehouse 2 currently has 8 pending receipts and 3 active transfers that need attention today. Would you like me to pull up the specific SKUs?" 
+    try {
+      const response = await fetch(`http://localhost:8000/v1/ai/query?query=${encodeURIComponent(userQuery)}`, {
+        method: "POST",
+        headers: { "accept": "application/json" }
+      });
+      const data = await response.json();
+      
+      const reply = data.answer || data.message || "I couldn't process that query.";
+      setMessages(prev => [...prev, {
+        id: Date.now(),
+        role: "ai",
+        content: reply
       }]);
-    }, 1000);
+    } catch (err) {
+      setMessages(prev => [...prev, {
+        id: Date.now(),
+        role: "ai",
+        content: "Error contacting StockSense AI backend. Please ensure the server is running."
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -84,6 +101,16 @@ export function AIChatPanel() {
                   </div>
                 </div>
               ))}
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-white/5 border border-white/10 text-slate-400 p-3 rounded-2xl rounded-tl-sm text-[13px] flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse"></span>
+                    <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse delay-150"></span>
+                    <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse delay-300"></span>
+                    Thinking...
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Input Area */}

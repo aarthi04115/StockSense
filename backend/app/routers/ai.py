@@ -115,3 +115,36 @@ def natural_language_query(query: str):
                 "original_query": query,
                 "message": "AI is temporarily unavailable. Please try again in a moment."
             }
+
+@router.get("/forecasts")
+def get_all_forecasts(db: Session = Depends(get_db)):
+    from ..models import AIForecast, Product
+    forecasts = db.query(AIForecast).order_by(AIForecast.generated_at.desc()).limit(10).all()
+    res = []
+    for f in forecasts:
+        p = db.query(Product).filter(Product.id == f.product_id).first()
+        res.append({
+            "id": f.id,
+            "product_name": p.name if p else f"Product {f.product_id}",
+            "sku": p.sku if p else "UNKNOWN",
+            "predicted_stockout_date": f.predicted_stockout_date,
+            "suggested_reorder_qty": f.suggested_reorder_qty,
+            "confidence": f.confidence
+        })
+    return res
+
+@router.get("/anomalies")
+def get_all_anomalies(db: Session = Depends(get_db)):
+    from ..models import AIAnomalyFlag, Product
+    anomalies = db.query(AIAnomalyFlag).order_by(AIAnomalyFlag.id.desc()).limit(10).all()
+    res = []
+    for a in anomalies:
+        p = db.query(Product).filter(Product.id == a.product_id).first()
+        res.append({
+            "id": a.id,
+            "product_name": p.name if p else f"Product {a.product_id}",
+            "anomaly_score": a.anomaly_score,
+            "reason": a.reason,
+            "reviewed": a.reviewed
+        })
+    return res

@@ -25,7 +25,7 @@ Beyond standard inventory features, StockSense integrates an AI/ML layer that ad
 *   **Database:** PostgreSQL (using SQLite for local dev/demo)
 *   **Cache & Queue:** Redis
 *   **AI/ML Runtime:** Python (scikit-learn, Prophet, pandas)
-*   **LLM Layer:** Claude API (Anthropic)
+*   **LLM Layer:** Google Gemini API (Gemini 3.8 Flash)
 *   **Infrastructure:** Docker & Docker Compose
 
 ### System Design
