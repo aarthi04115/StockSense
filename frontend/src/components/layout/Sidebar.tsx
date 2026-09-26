@@ -1,5 +1,5 @@
-import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Package, Truck, ArrowRightLeft, Settings, Bot, Map } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { LayoutDashboard, Package, Truck, ArrowRightLeft, Settings, Bot, Map, LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "../../lib/utils";
 
@@ -17,6 +17,21 @@ const navItems = [
 
 export function Sidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // Load user profile from localStorage
+  const savedUserStr = localStorage.getItem("stocksense_user");
+  const user = savedUserStr ? JSON.parse(savedUserStr) : { name: "Alex Rivera", role: "Inventory Manager" };
+
+  const initials = user.name
+    ? user.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
+    : "AR";
+
+  const handleLogout = () => {
+    localStorage.removeItem("stocksense_token");
+    localStorage.removeItem("stocksense_user");
+    navigate("/auth");
+  };
   
   return (
     <motion.div 
@@ -66,14 +81,23 @@ export function Sidebar() {
       </div>
       
       <div className="p-4 border-t border-white/5">
-        <div className="flex items-center gap-3 bg-black/20 p-3 rounded-xl border border-white/5 hover:bg-white/5 transition-colors cursor-pointer">
-          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center text-white font-medium shadow-lg">
-            JD
+        <div className="flex items-center justify-between bg-black/30 p-2.5 rounded-xl border border-white/5">
+          <div className="flex items-center gap-2.5 truncate">
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shadow-md shrink-0">
+              {initials}
+            </div>
+            <div className="truncate">
+              <p className="text-xs font-semibold text-white leading-tight truncate">{user.name}</p>
+              <p className="text-[10px] text-violet-400 truncate">{user.role}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-semibold text-white leading-none">John Doe</p>
-            <p className="text-xs text-gray-400 mt-1">Manager</p>
-          </div>
+          <button
+            onClick={handleLogout}
+            title="Sign Out"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors shrink-0 cursor-pointer ml-1"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
         </div>
       </div>
     </motion.div>

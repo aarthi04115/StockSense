@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import type { ReactNode } from "react";
 import { Layout } from "./components/layout/Layout";
 import { Dashboard } from "./pages/Dashboard";
 import { WarehouseMap } from "./pages/WarehouseMap";
@@ -11,23 +12,34 @@ import { Auth } from "./pages/Auth";
 import { AIInsights } from "./pages/AIInsights";
 import { Settings } from "./pages/Settings";
 
+function ProtectedRoute({ children }: { children: ReactNode }) {
+  const token = localStorage.getItem("stocksense_token");
+  if (!token) {
+    return <Navigate to="/auth" replace />;
+  }
+  return <Layout>{children}</Layout>;
+}
+
 function App() {
   return (
     <Router>
       <Routes>
+        {/* Authentication Page (Public) */}
         <Route path="/auth" element={<Auth />} />
         
-        {/* Protected routes wrapped in Layout */}
-        <Route path="/" element={<Layout><Dashboard /></Layout>} />
-        <Route path="/products" element={<Layout><Products /></Layout>} />
-        <Route path="/map" element={<Layout><WarehouseMap /></Layout>} />
-        <Route path="/receipts" element={<Layout><Receipts /></Layout>} />
-        <Route path="/deliveries" element={<Layout><Deliveries /></Layout>} />
-        <Route path="/transfers" element={<Layout><Transfers /></Layout>} />
-        <Route path="/ledger" element={<Layout><LedgerTimeline /></Layout>} />
-        <Route path="/ai" element={<Layout><AIInsights /></Layout>} />
-        <Route path="/settings" element={<Layout><Settings /></Layout>} />
-        <Route path="*" element={<Layout><div className="text-white p-4 text-xl">404 - Page Not Found</div></Layout>} />
+        {/* Protected workspace routes */}
+        <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/products" element={<ProtectedRoute><Products /></ProtectedRoute>} />
+        <Route path="/map" element={<ProtectedRoute><WarehouseMap /></ProtectedRoute>} />
+        <Route path="/receipts" element={<ProtectedRoute><Receipts /></ProtectedRoute>} />
+        <Route path="/deliveries" element={<ProtectedRoute><Deliveries /></ProtectedRoute>} />
+        <Route path="/transfers" element={<ProtectedRoute><Transfers /></ProtectedRoute>} />
+        <Route path="/ledger" element={<ProtectedRoute><LedgerTimeline /></ProtectedRoute>} />
+        <Route path="/ai" element={<ProtectedRoute><AIInsights /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+        
+        {/* Fallback */}
+        <Route path="*" element={<ProtectedRoute><div className="text-white p-4 text-xl">404 - Page Not Found</div></ProtectedRoute>} />
       </Routes>
     </Router>
   );

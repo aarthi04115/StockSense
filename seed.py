@@ -15,7 +15,14 @@ def seed_db():
     
     print("Seeding StockSense Database...")
 
-    # 1. Seed Warehouses if missing
+    # 0. Seed Users with Roles
+    if db.query(models.User).count() == 0:
+        u1 = models.User(name="Alex Rivera", email="admin@stocksense.io", password_hash="password123", role="Inventory Manager")
+        u2 = models.User(name="Jordan Lee", email="staff@stocksense.io", password_hash="password123", role="Warehouse Staff")
+        u3 = models.User(name="Taylor Morgan", email="logistics@stocksense.io", password_hash="password123", role="Logistics Coordinator")
+        db.add_all([u1, u2, u3])
+        db.commit()
+        print("Seeded default users with roles.")
     warehouses = db.query(models.Warehouse).all()
     if len(warehouses) < 3:
         wh_names = [w.name for w in warehouses]
