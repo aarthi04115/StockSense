@@ -38,8 +38,11 @@ export function CommandPalette() {
   const handleSelect = (cmd: any) => {
     setIsOpen(false);
     setQuery("");
-    // Handle navigation/action
-    console.log("Selected:", cmd.name);
+    if (cmd.name.includes("Receipt")) navigate("/receipts");
+    else if (cmd.name.includes("Delivery")) navigate("/deliveries");
+    else if (cmd.name.includes("Transfer")) navigate("/transfers");
+    else if (cmd.name.includes("Adjustment")) navigate("/dashboard");
+    else if (cmd.type === "sku") navigate("/products");
   };
 
   return (

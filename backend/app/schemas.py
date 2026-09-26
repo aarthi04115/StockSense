@@ -36,22 +36,43 @@ class Warehouse(WarehouseBase):
     class Config:
         from_attributes = True
 
-# --- Receipts ---
-class ReceiptBase(BaseModel):
-    supplier_id: int
-    status: str = "Draft"
+# --- Locations ---
+class LocationBase(BaseModel):
     warehouse_id: int
+    code: str
+    type: str = "Storage"
 
-class ReceiptCreate(ReceiptBase):
+class LocationCreate(LocationBase):
     pass
 
-class Receipt(ReceiptBase):
+class Location(LocationBase):
     id: int
-    created_by: Optional[int] = None
-    validated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
+
+# --- Line Item Inputs ---
+class DeliveryItemInput(BaseModel):
+    product_id: int
+    qty_ordered: float
+
+class TransferItemInput(BaseModel):
+    product_id: int
+    qty: float
+
+class ReceiptItemInput(BaseModel):
+    product_id: int
+    qty_expected: float
+
+# --- Receipts ---
+class ReceiptBase(BaseModel):
+    supplier_id: int = 1
+    supplier_name: Optional[str] = "Standard Supplier"
+    status: str = "Draft"
+    warehouse_id: int = 1
+
+class ReceiptCreate(ReceiptBase):
+    lines: Optional[List[ReceiptItemInput]] = []
 
 class ReceiptLineBase(BaseModel):
     receipt_id: int
@@ -64,26 +85,31 @@ class ReceiptLineCreate(ReceiptLineBase):
 
 class ReceiptLine(ReceiptLineBase):
     id: int
+    product: Optional[Product] = None
+
+    class Config:
+        from_attributes = True
+
+class Receipt(ReceiptBase):
+    id: int
+    created_by: Optional[int] = None
+    validated_at: Optional[datetime] = None
+    lines: Optional[List[ReceiptLine]] = []
 
     class Config:
         from_attributes = True
 
 # --- Deliveries ---
 class DeliveryBase(BaseModel):
-    customer_id: int
+    customer_id: int = 1
+    customer_name: Optional[str] = "ACME Corporation"
+    shipping_address: Optional[str] = "Main Logistics Hub, Suite 400"
+    carrier: Optional[str] = "Express Freight"
     status: str = "Draft"
-    warehouse_id: int
+    warehouse_id: int = 1
 
 class DeliveryCreate(DeliveryBase):
-    pass
-
-class Delivery(DeliveryBase):
-    id: int
-    created_by: Optional[int] = None
-    validated_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
+    lines: Optional[List[DeliveryItemInput]] = []
 
 class DeliveryLineBase(BaseModel):
     delivery_id: int
@@ -96,6 +122,16 @@ class DeliveryLineCreate(DeliveryLineBase):
 
 class DeliveryLine(DeliveryLineBase):
     id: int
+    product: Optional[Product] = None
+
+    class Config:
+        from_attributes = True
+
+class Delivery(DeliveryBase):
+    id: int
+    created_by: Optional[int] = None
+    validated_at: Optional[datetime] = None
+    lines: Optional[List[DeliveryLine]] = []
 
     class Config:
         from_attributes = True
@@ -104,17 +140,11 @@ class DeliveryLine(DeliveryLineBase):
 class TransferBase(BaseModel):
     from_location_id: int
     to_location_id: int
+    reason: Optional[str] = "Internal Stock Replenishment"
     status: str = "Draft"
 
 class TransferCreate(TransferBase):
-    pass
-
-class Transfer(TransferBase):
-    id: int
-    created_by: Optional[int] = None
-
-    class Config:
-        from_attributes = True
+    lines: Optional[List[TransferItemInput]] = []
 
 class TransferLineBase(BaseModel):
     transfer_id: int
@@ -126,6 +156,18 @@ class TransferLineCreate(TransferLineBase):
 
 class TransferLine(TransferLineBase):
     id: int
+    product: Optional[Product] = None
+
+    class Config:
+        from_attributes = True
+
+class Transfer(TransferBase):
+    id: int
+    created_by: Optional[int] = None
+    validated_at: Optional[datetime] = None
+    lines: Optional[List[TransferLine]] = []
+    from_location: Optional[Location] = None
+    to_location: Optional[Location] = None
 
     class Config:
         from_attributes = True

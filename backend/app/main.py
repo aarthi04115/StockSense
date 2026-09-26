@@ -5,12 +5,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from .routers import products, warehouses, receipts, deliveries, ai, transfers, adjustments, auth
-from .database import engine
+from .database import engine, run_migrations
 from . import models
 import json
 
-# Create tables if they don't exist (useful for dev before migrations)
+# Create tables if they don't exist and ensure columns exist
 models.Base.metadata.create_all(bind=engine)
+run_migrations()
 
 app = FastAPI(
     title="StockSense API",

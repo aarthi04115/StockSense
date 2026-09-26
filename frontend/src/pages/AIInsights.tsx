@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { Bot, Sparkles, AlertTriangle, TrendingUp } from "lucide-react";
-import { motion } from "framer-motion";
+import { Sparkles, AlertTriangle, TrendingUp } from "lucide-react";
 
 export function AIInsights() {
   const [forecasts, setForecasts] = useState<any[]>([]);

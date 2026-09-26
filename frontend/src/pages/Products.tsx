@@ -7,6 +7,7 @@ interface Product {
   name: string;
   sku: string;
   category_id: number;
+  category?: string;
   uom: string;
   stock: number; // calculated from stock_levels
   status: string;
@@ -14,7 +15,7 @@ interface Product {
 
 export function Products() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",

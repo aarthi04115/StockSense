@@ -55,11 +55,11 @@ export function WarehouseMap() {
         {/* Map Grid container */}
         <div className="flex-1 overflow-auto bg-black/20 rounded-xl border border-white/5 p-8 flex items-center justify-center">
           <div className="flex gap-16">
-            {RACKS.map((rack, rIdx) => (
+            {RACKS.map((rack) => (
               <div key={rack} className="flex flex-col gap-4">
                 <div className="text-center font-bold text-gray-400 text-lg mb-2">Rack {rack}</div>
                 <div className="grid grid-cols-2 gap-2">
-                  {BINS.map((bin, bIdx) => {
+                  {BINS.map((bin) => {
                     const cellId = `${rack}-${bin}`;
                     const isSelected = selectedCell === cellId;
                     return (

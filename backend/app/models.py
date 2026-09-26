@@ -59,11 +59,14 @@ class Receipt(Base):
     __tablename__ = "receipts"
     id = Column(Integer, primary_key=True, index=True)
     supplier_id = Column(Integer) # Mock supplier ID for now
-    status = Column(String) # Draft, Waiting, Done
+    supplier_name = Column(String, default="Standard Supplier")
+    status = Column(String, default="Draft") # Draft, Waiting, Done
     warehouse_id = Column(Integer, ForeignKey("warehouses.id"))
     created_by = Column(Integer, ForeignKey("users.id"))
     validated_at = Column(DateTime, nullable=True)
     
+    lines = relationship("ReceiptLine", back_populates="receipt", cascade="all, delete-orphan")
+
 class ReceiptLine(Base):
     __tablename__ = "receipt_lines"
     id = Column(Integer, primary_key=True, index=True)
@@ -72,15 +75,23 @@ class ReceiptLine(Base):
     qty_expected = Column(Float)
     qty_received = Column(Float, default=0.0)
 
+    receipt = relationship("Receipt", back_populates="lines")
+    product = relationship("Product")
+
 class Delivery(Base):
     __tablename__ = "deliveries"
     id = Column(Integer, primary_key=True, index=True)
-    customer_id = Column(Integer) # Mock customer ID for now
-    status = Column(String) # Draft, Picked, Done
+    customer_id = Column(Integer, default=1)
+    customer_name = Column(String, default="ACME Corporation")
+    shipping_address = Column(String, default="Main Logistics Hub, Suite 400")
+    carrier = Column(String, default="Express Freight")
+    status = Column(String, default="Draft") # Draft, Picked, Done, Cancelled
     warehouse_id = Column(Integer, ForeignKey("warehouses.id"))
     created_by = Column(Integer, ForeignKey("users.id"))
     validated_at = Column(DateTime, nullable=True)
     
+    lines = relationship("DeliveryLine", back_populates="delivery", cascade="all, delete-orphan")
+
 class DeliveryLine(Base):
     __tablename__ = "delivery_lines"
     id = Column(Integer, primary_key=True, index=True)
@@ -89,13 +100,22 @@ class DeliveryLine(Base):
     qty_ordered = Column(Float)
     qty_picked = Column(Float, default=0.0)
 
+    delivery = relationship("Delivery", back_populates="lines")
+    product = relationship("Product")
+
 class Transfer(Base):
     __tablename__ = "transfers"
     id = Column(Integer, primary_key=True, index=True)
     from_location_id = Column(Integer, ForeignKey("locations.id"))
     to_location_id = Column(Integer, ForeignKey("locations.id"))
-    status = Column(String)
+    reason = Column(String, default="Internal Stock Replenishment")
+    status = Column(String, default="Draft") # Draft, In Transit, Done
     created_by = Column(Integer, ForeignKey("users.id"))
+    validated_at = Column(DateTime, nullable=True)
+
+    lines = relationship("TransferLine", back_populates="transfer", cascade="all, delete-orphan")
+    from_location = relationship("Location", foreign_keys=[from_location_id])
+    to_location = relationship("Location", foreign_keys=[to_location_id])
 
 class TransferLine(Base):
     __tablename__ = "transfer_lines"
@@ -103,6 +123,9 @@ class TransferLine(Base):
     transfer_id = Column(Integer, ForeignKey("transfers.id"))
     product_id = Column(Integer, ForeignKey("products.id"))
     qty = Column(Float)
+
+    transfer = relationship("Transfer", back_populates="lines")
+    product = relationship("Product")
 
 class Adjustment(Base):
     __tablename__ = "adjustments"

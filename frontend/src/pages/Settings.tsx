@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Settings as SettingsIcon, Warehouse, Bell, Shield, FileText, CheckCircle } from "lucide-react";
+import { Warehouse, Bell, Shield, FileText, CheckCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function Settings() {

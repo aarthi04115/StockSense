@@ -12,7 +12,7 @@ interface Receipt {
 
 export function Receipts() {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     warehouse_id: 1,

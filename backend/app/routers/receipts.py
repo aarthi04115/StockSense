@@ -12,12 +12,26 @@ router = APIRouter(
 
 @router.post("/", response_model=schemas.Receipt)
 def create_receipt(receipt: schemas.ReceiptCreate, db: Session = Depends(get_db)):
-    db_receipt = models.Receipt(**receipt.model_dump())
+    receipt_data = receipt.model_dump(exclude={"lines"})
+    db_receipt = models.Receipt(**receipt_data)
     # Mocking user_id = 1 for now
     db_receipt.created_by = 1 
     db.add(db_receipt)
     db.commit()
     db.refresh(db_receipt)
+
+    if receipt.lines:
+        for line_in in receipt.lines:
+            db_line = models.ReceiptLine(
+                receipt_id=db_receipt.id,
+                product_id=line_in.product_id,
+                qty_expected=line_in.qty_expected,
+                qty_received=0.0
+            )
+            db.add(db_line)
+        db.commit()
+        db.refresh(db_receipt)
+
     return db_receipt
 
 @router.post("/{receipt_id}/lines", response_model=schemas.ReceiptLine)

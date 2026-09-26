@@ -1,5 +1,4 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertTriangle, TrendingUp, PackageSearch, Activity } from "lucide-react";
 
 const attentionItems = [
   { id: 1, sku: "SKU-1001", name: "Premium Wireless Headphones", type: "stockout", days: 1, cur: 12, min: 20, priority: "high" },
