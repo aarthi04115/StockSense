@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    
+    --color-brand-bg: 3 5 16;
+    --color-brand-surface: 10 13 22;
+    
+    --color-primary-500: 139 92 246;
+    --color-primary-600: 124 58 237;
+    
+    --color-surface-base: 11 13 23;
+  }
+
+  body {
+    background-color: rgb(var(--color-surface-base));
+    color: white;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    background-color: #ffffff0d;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 1rem;
+    border: 1px solid #ffffff0d;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+  }
+  
+  .glass-panel:hover {
+    background-color: #ffffff1a;
+    border-color: #ffffff1a;
+  }
+
+  .text-gradient {
+    background-image: linear-gradient(to right, var(--tw-gradient-stops));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .badge-low {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: rgb(52, 211, 153);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  
+  .badge-medium {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: rgb(251, 191, 36);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  
+  .badge-high {
+    background-color: rgba(244, 63, 94, 0.1);
+    color: rgb(251, 113, 133);
+    border: 1px solid rgba(244, 63, 94, 0.2);
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #1e293b;
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #334155;
+}
