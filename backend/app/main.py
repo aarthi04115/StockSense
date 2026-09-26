@@ -1,6 +1,9 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from dotenv import load_dotenv
+load_dotenv()
+
 from .routers import products, warehouses, receipts, deliveries, ai, transfers, adjustments, auth
 from .database import engine
 from . import models
